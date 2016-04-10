@@ -1,0 +1,113 @@
+<head>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="http://dimplejs.org/dist/dimple.v2.1.6.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="mystyle.css">
+</head>
+<body>
+
+  <div id="chartContainer">
+
+  <script type="text/javascript">
+    debugger;
+    //var svg = dimple.newSvg("#chartContainer", 1000, 800);
+    var svg = dimple.newSvg("#chartContainer", "80%", "48%");        
+    
+    d3.csv("/data/train.csv", function (data) {
+      debugger;
+      for( i = 0; i < data.length; i++) {
+        if(data[i].Survived == "0") { 
+            data[i].Status = "Dead"; 
+        } 
+        else { 
+            data[i].Status = "Survived";
+        }
+      }
+      
+      
+      
+      
+      
+      var myChart = new dimple.chart(svg, data);
+      myChart.setBounds(60, 80, 510, 305)
+      //myChart.setBounds(60, 30, "100%", "100%")
+      
+      // Add an x and 2 y-axes.  When using multiple axes it's
+      // important to assign them to variables to pass to the series
+      var x = myChart.addCategoryAxis("x", ["Pclass","Sex"]);
+      var y1 = myChart.addMeasureAxis("y", "Fare");
+      var y2 = myChart.addMeasureAxis("y", "Age");
+      
+      // Change the font sizes and the text of the axes
+      x.title = "Passenger Class/Sex";
+      x.fontSize = "18px";
+      //x.fontFamily = "sans-serif";
+      x.fontFamily = "calibri";
+      y1.title = "Average Passenger Fare";
+      y1.fontSize = "18px";
+      y1.fontFamily = "calibri";
+      y2.title = "Average Age";
+      y2.fontSize = "18px";
+      //y2.fontFamily = "sans-serif";
+      y2.fontFamily = "calibri";
+      
+      var avg_fare = myChart.addSeries("Sex", dimple.plot.bar, [x, y1]);
+      avg_fare.aggregate = dimple.aggregateMethod.avg;
+      var avg_age = myChart.addSeries("Sex", dimple.plot.bubble, [x, y2]);
+      avg_age.aggregate = dimple.aggregateMethod.avg;
+      //color_avg = avg_age.chart.getColor();
+      //color_avg.stroke = "black";
+      debugger;
+      //avg_age.color.stroke = "black";
+      var legend = myChart.addLegend(60, 60, 510, 20, "right");
+      legend.fontSize = "15px";
+      // Animate the chart for every date value, any dimension can be passed
+      // here and dimple will animate over its values.
+      var storyboard = myChart.setStoryboard("Status");
+      storyboard.fontSize = "18px";
+      storyboard.fontFamily = "calibri";
+      //storyboard.frameDuration = 5000;
+      myChart.draw();
+      
+    d3.select("#btn2").on("click", function() {
+        debugger;
+        storyboard.startAnimation();
+    });
+
+    // pause button click handler
+    d3.select("#btn1").on("click", function()  {
+        debugger;
+        storyboard.pauseAnimation();
+    });   
+    
+   
+    svg.append("text")
+   .attr("x", myChart._xPixels() + myChart._widthPixels() / 2)
+   .attr("y", 30)
+   .style("text-anchor", "middle")
+   .style("font-family", "calibri")
+   .style("font-weight", "bold")
+   .style("font-size", "20px")
+   .text("Titanic Passenger Demographics")
+   
+   
+    //Opacity of circles and rectangles are changed to allow
+    //differentiating between them during overlap
+    var temp_rect = svg.selectAll("rect");    
+    var temp_circle = svg.selectAll("circle");    
+    temp_rect.attr("opacity","0.5");    
+    temp_circle.attr("opacity","1");
+    });
+    
+
+    
+    
+    
+    
+   
+  </script>
+  </div>
+  <button id="btn1">Pause</button>
+  <button id="btn2">Play</button>
+  <text id="text1">Clicking 'Pause' pauses the animation. Clicking 'Play' re-plays it.</text>
+  <div id="text2">The bars represent the average passenger fare. The bubbles represent the average age.</text>
+</body>
