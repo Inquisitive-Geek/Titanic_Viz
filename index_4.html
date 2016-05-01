@@ -1,0 +1,109 @@
+<head>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://dimplejs.org/dist/dimple.v2.1.6.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/mystyle.css">
+</head>
+<body>
+    <div id="chartContainer">
+        <script type="text/javascript">
+            var svg = dimple.newSvg("#chartContainer", 800, 550);
+
+            d3.csv("data/train.csv", function(data) {
+                // Status and Count fields are added to every data
+                //
+                for (i = 0; i < data.length; i++) {
+                    if (data[i].Survived == "0") {
+                        data[i].Status = "Dead";
+                        data[i].Count = 1;  
+                    } else {
+                        data[i].Status = "Survived";
+                        data[i].Count = 1;
+                    }
+                }
+
+                var myChart = new dimple.chart(svg, data);
+                myChart.setBounds(60, 80, 510, 405)
+
+                // Add an x and 2 y-axes.  When using multiple axes it's
+                // important to assign them to variables to pass to the series
+                var x = myChart.addCategoryAxis("x", ["Pclass", "Sex"]);
+                var y1 = myChart.addMeasureAxis("y", "Count");
+                var y2 = myChart.addMeasureAxis("y", "Age");
+
+                // Change the font sizes and the text of the axes
+                x.title = "Passenger Class/Sex";
+                x.fontSize = "18px";
+                //x.fontFamily = "sans-serif";
+                x.fontFamily = "calibri";
+                y1.title = "Passenger Count";
+                y1.fontSize = "18px";
+                y1.fontFamily = "calibri";
+                y2.title = "Average Age";
+                y2.fontSize = "18px";
+                y2.fontFamily = "calibri";
+
+                var count_fare = myChart.addSeries("Sex", dimple.plot.bar, [x, y1]);
+                // The passenger counts are aggregated for each passenger class - sex
+                // combination
+                count_fare.aggregate = dimple.aggregateMethod.count;
+                var avg_age = myChart.addSeries("Sex", dimple.plot.bubble, [x, y2]);
+                // The average age is computed for each passenger class - sex
+                // combination
+                //avg_age.categoryFields = ["Pclass"];
+                avg_age.aggregate = dimple.aggregateMethod.avg;
+                //Try out tick values as shown here
+                //https://github.com/mbostock/d3/wiki/SVG-Axes#tickValues
+                
+                // Legend of the two sex values are added
+                var legend = myChart.addLegend(60, 60, 510, 20, "right");
+                legend.fontSize = "15px";
+                // Animate the chart for every date value, any dimension can be passed
+                // here and dimple will animate over its values.
+                var storyboard = myChart.setStoryboard("Status");
+                storyboard.fontSize = "18px";
+                storyboard.fontFamily = "calibri";
+                myChart.draw();
+
+                // Button click handler
+                d3.select("#btn1").on("click", function() {
+                    // Obtain the button text to place the condition on
+                    var button = document.getElementById("btn1");
+                    var text = button.firstChild;
+                    if (text.data == "Pause") {
+                        // Pause the animation
+                        storyboard.pauseAnimation();
+                        // Change the button border color to green
+                        button.style.border = "2px solid #4CAF50";
+                    } else {
+                        // Play the animation
+                        storyboard.startAnimation();
+                        // Change the button border color to red
+                        button.style.border = "2px solid #f44336";
+                    }
+                    // Alternate the text of button on click
+                    text.data = text.data == "Pause" ? "Play" : "Pause";
+                });
+
+                // Add a Title to the chart
+                svg.append("text")
+                    .attr("x", myChart._xPixels() + myChart._widthPixels() / 2)
+                    .attr("y", 30)
+                    .style("text-anchor", "middle")
+                    .style("font-family", "calibri")
+                    .style("font-weight", "bold")
+                    .style("font-size", "20px")
+                    .text("Titanic Passenger Demographics")
+
+                //Opacity of circles and rectangles are changed to allow
+                //differentiating between them during overlap
+                var temp_rect = svg.selectAll("rect");
+                var temp_circle = svg.selectAll("circle");
+                temp_rect.attr("opacity", "0.5");
+                temp_circle.attr("opacity", "1");
+            });
+        </script>
+    </div>
+    <button id="btn1">Pause</button>
+    <text id="text1">Clicking 'Pause' pauses the animation. Clicking 'Play' re-plays it.</text>
+    <div id="text2">The bars represent the average passenger count. The bubbles represent the average age.</text>
+</body>
